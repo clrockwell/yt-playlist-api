@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Youtube Playlist API</title>
+
+<script type="text/javascript">
+
+	// load is called after google api is loaded
+  	function load() {
+  		console.log('called');
+	  	gapi.client.setApiKey('AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U');
+	  	gapi.client.load('youtube', 'v3', makeRequest);
+	}
+
+	
+
+	function listenToVideoItems() {
+		$('.ytpe_playlist-list-item').not('.ytpe_playlist-list-item_active-item').click(
+			function(event) {
+				var videoId = $(this).attr('data-video-id');
+				updateVideo(videoId);
+			}
+		);
+	}
+
+	
+
+	/**
+	 * prepare object to pass to theming function
+	 * 
+	 * @param json item
+	 */
+	function getPlaylistMenuItem(item) {
+		var options = {}, classes = [];
+		classes.push('ytpe_playlist-list-item');
+		if (item.snippet.position == 0) {
+			classes.push('ytpe_playlist-list-item_active-item');
+		}
+		//console.log(item);
+		var videoId = item.snippet.resourceId.videoId;
+		options = {
+			'classes': classes,
+			'data-video-id': item.snippet.resourceId.videoId
+		};
+		var li = themeSingleItem('li', options);
+		var liElements = [];
+		liElements.push(
+			themeSingleItem('span', {
+				'classes':
+					[
+						'ytpe_playlist-list-item_index',
+					],
+				'textNode': item.snippet.position,
+				}
+			)
+		);
+		liElements.push(
+			themeSingleItem('span', {
+				'classes': 
+					[
+						'ytpe_playlist-list-item_thumbnail'
+					],
+				'appendChildren':
+					[
+						{
+							'tag': 'img',
+							'options' : {
+								'src': item.snippet.thumbnails.default.url,
+							}
+						},
+					]
+				}
+			)
+		);
+		liElements.push(
+			themeSingleItem('span', {
+				'classes':
+					[
+						'ytpe_playlist-list-item_title'
+					],
+				'textNode': item.snippet.title,
+			})
+		);
+
+		for (var i = 0; i < liElements.length; i++) {
+			li.appendChild(liElements[i]);
+		}
+
+		return li;
+	}
+
+	/**
+	 * Theme a single item as an html element
+	 */
+	function themeSingleItem(tag, options) {
+		// add the element to dom
+
+		var el = document.createElement(tag);
+				
+		// go through each of the options
+		for (var key in options) {
+			// double check that this property belongs 
+			//   to our options
+			if (options.hasOwnProperty(key)) {
+				if (key == 'classes') {
+					var stringClasses = options.classes.join(' ');
+					el.setAttribute('class', stringClasses);
+				}
+				else if (key == 'appendChildren') {
+					for (var i = 0; i < options.appendChildren.length; i++) {
+						el.appendChild(themeSingleItem(options.appendChildren[i].tag, options.appendChildren[i].options));
+					}
+				}
+				else if (key == 'textNode') {
+					el.appendChild(document.createTextNode(options[key]));
+				}
+				// go through all other options
+				else {
+					el.setAttribute(key, options[key]);
+				}
+			}
+		}
+
+
+		return el;
+	}
+
+	/**
+	 * get html content for each item
+	 *
+	 * @return object
+	 */
+	function playlistMenuItemPrepareElements(item) {
+		var itemInfo = [];
+		var snip = item.snippet;
+		var thumb, title, index, author, description, videoId;
+		itemInfo.position = snip.position;
+		itemInfo.description = snip.description;
+		itemInfo.title = snip.title;
+		itemInfo.videoId = snip.resourceId.videoId;
+		itemInfo.thumb = snip.thumbnails.default.url;
+
+		return itemInfo;
+
+	}
+
+
+	// add the video to page using swfObject
+	function playVideo(videoId, customId, videoDivId) {
+	  	// params for swfObject
+		var params = { allowScriptAccess: "always" };
+		// attributes for swfObject
+		var atts = { id: customId + "_video_wrapper" };
+		var uri = 'http://www.youtube.com/v/' + videoId + '?enablejsapi=1&playerapiid=ytplayer&version=3'
+		console.log(uri);
+		swfobject.embedSWF(uri, videoDivId, "425", "356", "8", null, null, params, atts);
+	}
+
+	// called by youtube embed when video/playlist ready
+	function updateVideo(newVideoId) {
+		player = document.getElementById('myytplayer');
+		player.cueVideoById(newVideoId);
+	}
+
+
+
+/**
+ * With working prototype, start building classes */
+
+/**
+ * Main constructor
+ *
+ * @param string wrapper
+ *    a jquery usable selector
+ * @param playlistId
+ *    the id of the playlist
+ */
+
+
+function youTubeEmbedPlaylistPlayer(wrapper, playlistId) {
+	
+	var playlist;
+	// life saver: see http://stackoverflow.com/questions/5316697/jquery-return-data-after-ajax-call-success/5316805#5316805
+	var getPlaylist = makeRequest(playlistId);
+	getPlaylist.success(function(data) {
+		playlist = data;
+		var firstVideoId = playlist.items[0].snippet.resourceId.videoId;
+		var playListMenu = buildPlaylistMenu(playlist, wrapper);
+
+		// get the wrapper
+		var $mainWrap = $('#' + wrapper);
+
+		// add a div for the video
+		var videoDiv = document.createElement('div');
+		var videoDivId = wrapper + '_video-wrapper';
+		videoDiv.setAttribute('id', videoDivId);
+		$mainWrap.prepend(videoDiv);
+		// check the page for any iframes
+		var iframes = document.getElementsByTagName('iframe');
+		// get a custom id for video, based on number of iframes
+		var customId = 'ytpe_embedded_player_' + iframes.length + 1;
+		// add the first video to the wrapper
+		playVideo(firstVideoId, customId, videoDivId);
+		$mainWrap.append(playListMenu);
+		
+		listenToVideoItems();
+	})	
+
+}
+
+// retrieve the playlist via google api
+function makeRequest(playlistId) {
+	var API = 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U';
+	return $.ajax({
+		url: 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&key=' + API,
+		dataType: 'json',
+		async: false,
+		type: 'GET',
+	})
+}
+
+/**
+	 * build the menu of playlist items
+	 *
+	 * @param json playlist
+	 *   all playlist info as returned by google youtube api
+
+	 */
+	function buildPlaylistMenu(playlist, wrapper) {
+		var items = playlist.items;
+		var ul = themeSingleItem('ul', 
+			{
+				'classes' : [
+					'ytpe_playlist-list',
+				]
+			}
+		);
+		for (var i = 0; i < items.length; i++) {
+			ul.appendChild(getPlaylistMenuItem(items[i]));
+		}
+		var playerWrap = document.getElementById('ytpe_playlist-wrapper');
+
+		return ul;
+		//console.log(ul);
+	}
+
+
+</script>
+
+
+
+
+
+
+</head>
+<body>
+
+	<h1>Embed Youtube-esque playlist</h1>
+	<script type="text/javascript" src="libs/swfobject/swfobject.js"></script>
+
+	<div id="Playlist2013">
+	</div>
+
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+
+	<script type="text/javascript">
+	 $(function() {
+	 	youTubeEmbedPlaylistPlayer('Playlist2013', 'PLl_3zhp59iHxWSi_beXnRJFW-8F2sMfAd');	 	
+	 });
+	</script>
+
+</body>
+</html>
