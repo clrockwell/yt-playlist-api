@@ -6,15 +6,6 @@
 
 <script type="text/javascript">
 
-	// load is called after google api is loaded
-  	function load() {
-  		console.log('called');
-	  	gapi.client.setApiKey('AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U');
-	  	gapi.client.load('youtube', 'v3', makeRequest);
-	}
-
-	
-
 	function listenToVideoItems() {
 		$('.ytpe_playlist-list-item').not('.ytpe_playlist-list-item_active-item').click(
 			function(event) {
@@ -153,7 +144,6 @@
 		// attributes for swfObject
 		var atts = { id: customId + "_video_wrapper" };
 		var uri = 'http://www.youtube.com/v/' + videoId + '?enablejsapi=1&playerapiid=ytplayer&version=3'
-		console.log(uri);
 		swfobject.embedSWF(uri, videoDivId, "425", "356", "8", null, null, params, atts);
 	}
 
@@ -262,11 +252,16 @@ function makeRequest(playlistId) {
 	<div id="Playlist2013">
 	</div>
 
+	<div id="PlaylistTestimonials">
+	</div>
+
 <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 
 	<script type="text/javascript">
 	 $(function() {
-	 	youTubeEmbedPlaylistPlayer('Playlist2013', 'PLl_3zhp59iHxWSi_beXnRJFW-8F2sMfAd');	 	
+	 	youTubeEmbedPlaylistPlayer('Playlist2013', 'PLl_3zhp59iHxWSi_beXnRJFW-8F2sMfAd');
+	 	youTubeEmbedPlaylistPlayer('PlaylistTestimonials', 'PLl_3zhp59iHy6DmGv2v5KbRjVwxUb9mo5');
+
 	 });
 	</script>
 
