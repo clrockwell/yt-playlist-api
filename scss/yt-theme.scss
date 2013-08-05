@@ -1,0 +1,85 @@
+/*----------------------------
+ * 
+ * Theme for YouTube Playlist API
+ *
+ * Default theme meant to resemble YouTube native style
+ *
+ */
+
+/*-----------------
+  Resets
+  ----------------*/
+li {
+}
+
+/*-----------------
+  Colors
+  -----------------*/
+
+
+/*-----------------
+  Fonts
+  -----------------*/
+.ytpe_playlist-wrapper {
+	font: 14px/1.4 Arial, sans-serif;
+	color: #FFF;
+}
+
+
+
+/*-----------------
+  Layout
+  -----------------*/
+.ytpe_playlist-wrapper {
+	object,
+	.ytpe_playlist-list {
+		display: inline-block;
+		vertical-align: top;
+	}
+	.ytpe_playlist-list {
+		margin: 0;
+		padding: 0;
+		height: 356px; /** @todo: should this be javascript, for portability? **/;
+		overflow-x: hidden;
+		overflow-y: scroll;
+	}
+}
+
+/*------------------
+  List styling
+  ------------------*/
+  .ytpe_playlist-list {
+ 	background-color: #2B2B2B;
+ 	width: 450px;
+  }
+ .ytpe-playlist_list-item {
+ 	border-top: 1px solid #4D4D4D;
+ 	border-bottom: 1px solid #222222;
+ 	margin-bottom: 1px;
+ 	padding: 10px 0 5px 10px;
+ 	> span {
+ 		vertical-align: top;
+ 		display: table-cell;
+ 	}
+ 	&:hover {
+ 		background-color: #353535;
+ 	}
+ 	&.ytpe-playlist_list-item_active-item {
+ 		background-color: #4F4F4F;
+ 		border-color: #4F4F4F;
+ 	}
+ }
+ .ytpe-playlist_list-item_index {
+ 	vertical-align: middle;
+ 	color: #666666;
+ 	padding-top: 10px;
+ 	/* @todo text shadow */
+ }
+ .ytpe-playlist_list-item_thumbnail {
+ 	padding: 0 5px 0 14px;
+ 	img {
+ 		width: 57px;
+ 		height: auto;
+ 	}
+ }
+ 

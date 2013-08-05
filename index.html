@@ -3,8 +3,14 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Youtube Playlist API</title>
-
+<style type="text/css">
+  @import url('css/yt-theme.css');
+</style>
 <script type="text/javascript">
+	
+	var apiKey = 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U';
+	var playerHeight = "356";
+	var playerWidth = "425";
 
 	function listenToVideoItems() {
 		//$('.ytpe-playlist_list-item').not('.ytpe-playlist_list-item_active-item').click(
@@ -14,13 +20,21 @@
 				var playerParent = $(this).attr('data-player-parent');
 				var videoId = $(this).attr('data-video-id');
 				updateVideo(playerParent, videoId);
-
+				updateListItemActiveItem($this);
 				return false;
 			}
 		);
 	}
 
-	
+	function updateListItemActiveItem(newActiveItem) {
+		var activeClass = 'ytpe-playlist_list-item_active-item';
+		// unset the active item
+		newActiveItem.parent('.ytpe_playlist-list')
+						.find('.' + activeClass)
+						.removeClass(activeClass);
+		// add active class to current item
+		newActiveItem.addClass(activeClass);
+	}
 
 	/**
 	 * prepare object to pass to theming function
@@ -32,7 +46,7 @@
 		classes.push('ytpe-playlist_list-item');
 		// give first item the active class
 		if (item.snippet.position == 0) {
-			//classes.push('ytpe-playlist_list-item_active-item');
+			classes.push('ytpe-playlist_list-item_active-item');
 		}
 		//console.log(item);
 		var videoId = item.snippet.resourceId.videoId;
@@ -49,7 +63,7 @@
 					[
 						'ytpe-playlist_list-item_index',
 					],
-				'textNode': item.snippet.position,
+				'textNode': item.snippet.position+1, // increment playlist number so that doesn't start on 0
 				}
 			)
 		);
@@ -131,7 +145,7 @@
 		// attributes for swfObject
 		var atts = { id: customId + "_video_wrapper" };
 		var uri = 'http://www.youtube.com/v/' + videoId + '?enablejsapi=1&playerapiid=ytplayer&version=3'
-		swfobject.embedSWF(uri, videoDivId, "425", "356", "8", null, null, params, atts);
+		swfobject.embedSWF(uri, videoDivId, playerWidth, playerHeight, "8", null, null, params, atts);
 	}
 
 	// called by youtube embed when video/playlist ready
@@ -168,7 +182,8 @@ function youTubeEmbedPlaylistPlayer(wrapper, playlistId) {
 
 		// get the wrapper
 		var $mainWrap = $('#' + wrapper);
-
+		// add class to wrapper
+		$mainWrap.addClass('ytpe_playlist-wrapper')
 		// add a div for the video
 		var videoDiv = document.createElement('div');
 		var videoDivId = wrapper + '_video-wrapper';
@@ -192,9 +207,8 @@ function youTubeEmbedPlaylistPlayer(wrapper, playlistId) {
 
 // retrieve the playlist via google api
 function makeRequest(playlistId) {
-	var API = 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U';
 	return $.ajax({
-		url: 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&key=' + API,
+		url: 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&key=' + apiKey,
 		dataType: 'json',
 		async: false,
 		type: 'GET',
@@ -220,7 +234,6 @@ function makeRequest(playlistId) {
 		for (var i = 0; i < items.length; i++) {
 			ul.appendChild(getPlaylistMenuItem(items[i], wrapper));
 		}
-		var playerWrap = document.getElementById('ytpe_playlist-wrapper');
 
 		return ul;
 		//console.log(ul);
