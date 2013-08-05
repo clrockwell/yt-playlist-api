@@ -8,6 +8,11 @@
 /*-----------------
   Resets
   ----------------*/
+li {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
 /*-----------------
   Colors
   -----------------*/
@@ -28,17 +33,21 @@
 .ytpe_playlist-wrapper .ytpe_playlist-list {
   margin: 0;
   padding: 0;
-  height: 356px;
-  /** @todo: should this be javascript, for portability? **/
   overflow-x: hidden;
-  overflow-y: scroll; }
+  overflow-y: auto;
+  margin-left: -5px;
+  /** @todo: should this be javascript, for portability? **/
+  width: 450px;
+  height: 299px;
+  /* video height - border */ }
 
 /*------------------
   List styling
   ------------------*/
 .ytpe_playlist-list {
   background-color: #2B2B2B;
-  width: 450px; }
+  border-top: 30px solid #1B1B1B;
+  border-bottom: 27px solid #1B1B1B; }
 
 .ytpe-playlist_list-item {
   border-top: 1px solid #4D4D4D;
@@ -58,10 +67,29 @@
   vertical-align: middle;
   color: #666666;
   padding-top: 10px;
-  /* @todo text shadow */ }
+  text-shadow: 1px 1px 1px black; }
 
 .ytpe-playlist_list-item_thumbnail {
   padding: 0 5px 0 14px; }
   .ytpe-playlist_list-item_thumbnail img {
     width: 57px;
     height: auto; }
+
+.ytpe-playlist_list-item_title {
+  text-align: left;
+  padding-right: 40px; }
+
+.jspVerticalBar {
+  display: none;
+  width: 16px; }
+
+.jspTrack {
+  background-color: #2B2B2B;
+  border-left: 1px solid #242424;
+  padding-left: 2px; }
+
+.jspDrag {
+  background-color: #1B1B1B; }
+
+.jspContainer:hover .jspVerticalBar {
+  display: inherit; }

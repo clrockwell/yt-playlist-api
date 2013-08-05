@@ -3,259 +3,25 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Youtube Playlist API</title>
+
+
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="libs/swfobject/swfobject.js"></script>
+
+<!-- jScrollPane stuff -->
+<link type="text/css" href="libs/jScrollPane-master/style/jquery.jscrollpane.css" rel="stylesheet" media="all" />
+<script type="text/javascript" src="libs/jScrollPane-master/script/jquery.mousewheel.js"></script>
+<script type="text/javascript" src="libs/jScrollPane-master/script/jquery.jscrollpane.min.js"></script>
+
 <style type="text/css">
   @import url('css/yt-theme.css');
 </style>
-<script type="text/javascript">
-	
-	var apiKey = 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U';
-	var playerHeight = "356";
-	var playerWidth = "425";
 
-	function listenToVideoItems() {
-		//$('.ytpe-playlist_list-item').not('.ytpe-playlist_list-item_active-item').click(
-		$('.ytpe-playlist_list-item').click(
-			function(event) {
-				var $this = $(this);
-				var playerParent = $(this).attr('data-player-parent');
-				var videoId = $(this).attr('data-video-id');
-				updateVideo(playerParent, videoId);
-				updateListItemActiveItem($this);
-				return false;
-			}
-		);
-	}
-
-	function updateListItemActiveItem(newActiveItem) {
-		var activeClass = 'ytpe-playlist_list-item_active-item';
-		// unset the active item
-		newActiveItem.parent('.ytpe_playlist-list')
-						.find('.' + activeClass)
-						.removeClass(activeClass);
-		// add active class to current item
-		newActiveItem.addClass(activeClass);
-	}
-
-	/**
-	 * prepare object to pass to theming function
-	 * 
-	 * @param json item
-	 */
-	function getPlaylistMenuItem(item, wrapper) {
-		var options = {}, classes = [];
-		classes.push('ytpe-playlist_list-item');
-		// give first item the active class
-		if (item.snippet.position == 0) {
-			classes.push('ytpe-playlist_list-item_active-item');
-		}
-		//console.log(item);
-		var videoId = item.snippet.resourceId.videoId;
-		options = {
-			'classes': classes,
-			'data-video-id': item.snippet.resourceId.videoId,
-			'data-player-parent': wrapper,
-		};
-		var li = themeSingleItem('li', options);
-		var liElements = [];
-		liElements.push(
-			themeSingleItem('span', {
-				'classes':
-					[
-						'ytpe-playlist_list-item_index',
-					],
-				'textNode': item.snippet.position+1, // increment playlist number so that doesn't start on 0
-				}
-			)
-		);
-		liElements.push(
-			themeSingleItem('span', {
-				'classes': 
-					[
-						'ytpe-playlist_list-item_thumbnail'
-					],
-				'appendChildren':
-					[
-						{
-							'tag': 'img',
-							'options' : {
-								'src': item.snippet.thumbnails.default.url,
-							}
-						},
-					]
-				}
-			)
-		);
-		liElements.push(
-			themeSingleItem('span', {
-				'classes':
-					[
-						'ytpe-playlist_list-item_title'
-					],
-				'textNode': item.snippet.title,
-			})
-		);
-
-		for (var i = 0; i < liElements.length; i++) {
-			li.appendChild(liElements[i]);
-		}
-
-		return li;
-	}
-
-	/**
-	 * Theme a single item as an html element
-	 */
-	function themeSingleItem(tag, options) {
-		// add the element to dom
-
-		var el = document.createElement(tag);
-				
-		// go through each of the options
-		for (var key in options) {
-			// double check that this property belongs 
-			//   to our options
-			if (options.hasOwnProperty(key)) {
-				if (key == 'classes') {
-					var stringClasses = options.classes.join(' ');
-					el.setAttribute('class', stringClasses);
-				}
-				else if (key == 'appendChildren') {
-					for (var i = 0; i < options.appendChildren.length; i++) {
-						el.appendChild(themeSingleItem(options.appendChildren[i].tag, options.appendChildren[i].options));
-					}
-				}
-				else if (key == 'textNode') {
-					el.appendChild(document.createTextNode(options[key]));
-				}
-				// go through all other options
-				else {
-					el.setAttribute(key, options[key]);
-				}
-			}
-		}
-
-
-		return el;
-	}
-
-	// add the video to page using swfObject
-	function playVideo(videoId, customId, videoDivId) {
-	  	// params for swfObject
-		var params = { allowScriptAccess: "always" };
-		// attributes for swfObject
-		var atts = { id: customId + "_video_wrapper" };
-		var uri = 'http://www.youtube.com/v/' + videoId + '?enablejsapi=1&playerapiid=ytplayer&version=3'
-		swfobject.embedSWF(uri, videoDivId, playerWidth, playerHeight, "8", null, null, params, atts);
-	}
-
-	// called by youtube embed when video/playlist ready
-	function updateVideo(playerParent, newVideoId) {
-		var findPlayer = $('#' + playerParent).find('object').attr('id');
-		var player = document.getElementById(findPlayer);
-		player.cueVideoById(newVideoId);
-	}
-
-
-
-/**
- * With working prototype, start building classes */
-
-/**
- * Main constructor
- *
- * @param string wrapper
- *    a jquery usable selector
- * @param playlistId
- *    the id of the playlist
- */
-
-
-function youTubeEmbedPlaylistPlayer(wrapper, playlistId) {
-	
-	var playlist;
-	// life saver: see http://stackoverflow.com/questions/5316697/jquery-return-data-after-ajax-call-success/5316805#5316805
-	var getPlaylist = makeRequest(playlistId);
-	getPlaylist.success(function(data) {
-		playlist = data;
-		var firstVideoId = playlist.items[0].snippet.resourceId.videoId;
-		var playListMenu = buildPlaylistMenu(playlist, wrapper);
-
-		// get the wrapper
-		var $mainWrap = $('#' + wrapper);
-		// add class to wrapper
-		$mainWrap.addClass('ytpe_playlist-wrapper')
-		// add a div for the video
-		var videoDiv = document.createElement('div');
-		var videoDivId = wrapper + '_video-wrapper';
-		videoDiv.setAttribute('id', videoDivId);
-		$mainWrap.prepend(videoDiv);
-		// check the page for any iframes
-		var iframes = document.getElementsByTagName('iframe');
-		// get a custom id for video, based on number of iframes
-		// will base it on etag returned from youtube api
-		var etag = data.etag.split('/');
-		etag = replaceAll('"', "", etag[1]);
-		var customId = 'ytpe_embedded_player_' + etag;
-		// add the first video to the wrapper
-		playVideo(firstVideoId, customId, videoDivId);
-		$mainWrap.append(playListMenu);
-		
-		listenToVideoItems();
-	})	
-
-}
-
-// retrieve the playlist via google api
-function makeRequest(playlistId) {
-	return $.ajax({
-		url: 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&key=' + apiKey,
-		dataType: 'json',
-		async: false,
-		type: 'GET',
-	})
-}
-
-/**
-	 * build the menu of playlist items
-	 *
-	 * @param json playlist
-	 *   all playlist info as returned by google youtube api
-
-	 */
-	function buildPlaylistMenu(playlist, wrapper) {
-		var items = playlist.items;
-		var ul = themeSingleItem('ul', 
-			{
-				'classes' : [
-					'ytpe_playlist-list',
-				]
-			}
-		);
-		for (var i = 0; i < items.length; i++) {
-			ul.appendChild(getPlaylistMenuItem(items[i], wrapper));
-		}
-
-		return ul;
-		//console.log(ul);
-	}
-
-// from http://stackoverflow.com/a/1144788/1108292
-function replaceAll(find, replace, str) {
-  return str.replace(new RegExp(find, 'g'), replace);
-}
-
-</script>
-
-
-
-
-
-
+<script type="text/javascript" src="js/yt-playlist-api.js"></script>
 </head>
 <body>
 
 	<h1>Embed Youtube-esque playlist</h1>
-	<script type="text/javascript" src="libs/swfobject/swfobject.js"></script>
 
 	<div id="Playlist2013">
 	</div>
@@ -263,14 +29,22 @@ function replaceAll(find, replace, str) {
 	<div id="PlaylistTestimonials">
 	</div>
 
-<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-
+	
 	<script type="text/javascript">
 	 $(function() {
-	 	youTubeEmbedPlaylistPlayer('Playlist2013', 'PLl_3zhp59iHxWSi_beXnRJFW-8F2sMfAd');
-	 	youTubeEmbedPlaylistPlayer('PlaylistTestimonials', 'PLl_3zhp59iHy6DmGv2v5KbRjVwxUb9mo5');
+	 	var p1 = new youTubePlaylist('PLl_3zhp59iHxWSi_beXnRJFW-8F2sMfAd', 'Playlist2013', 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U', '356', '450');
+	 	var p2 = new youTubePlaylist('PLl_3zhp59iHy6DmGv2v5KbRjVwxUb9mo5', 'PlaylistTestimonials', 'AIzaSyDZzFzB7ceTrnnOLa21O1SRqP83VTqG89U', '356', '450');
+	 	p1.embedPlaylist();
+	 	p2.embedPlaylist();
 
 	 });
+
+	 // must wait for window to load because
+	 //  of dynamic content
+	 $(window).load(function() {
+	 	// init scrollPane
+	 	$('.ytpe_playlist-list').jScrollPane();
+	 })
 	</script>
 
 
