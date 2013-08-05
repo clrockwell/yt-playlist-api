@@ -7,10 +7,15 @@
 <script type="text/javascript">
 
 	function listenToVideoItems() {
-		$('.ytpe_playlist-list-item').not('.ytpe_playlist-list-item_active-item').click(
+		//$('.ytpe-playlist_list-item').not('.ytpe-playlist_list-item_active-item').click(
+		$('.ytpe-playlist_list-item').click(
 			function(event) {
+				var $this = $(this);
+				var playerParent = $(this).attr('data-player-parent');
 				var videoId = $(this).attr('data-video-id');
-				updateVideo(videoId);
+				updateVideo(playerParent, videoId);
+
+				return false;
 			}
 		);
 	}
@@ -22,17 +27,19 @@
 	 * 
 	 * @param json item
 	 */
-	function getPlaylistMenuItem(item) {
+	function getPlaylistMenuItem(item, wrapper) {
 		var options = {}, classes = [];
-		classes.push('ytpe_playlist-list-item');
+		classes.push('ytpe-playlist_list-item');
+		// give first item the active class
 		if (item.snippet.position == 0) {
-			classes.push('ytpe_playlist-list-item_active-item');
+			//classes.push('ytpe-playlist_list-item_active-item');
 		}
 		//console.log(item);
 		var videoId = item.snippet.resourceId.videoId;
 		options = {
 			'classes': classes,
-			'data-video-id': item.snippet.resourceId.videoId
+			'data-video-id': item.snippet.resourceId.videoId,
+			'data-player-parent': wrapper,
 		};
 		var li = themeSingleItem('li', options);
 		var liElements = [];
@@ -40,7 +47,7 @@
 			themeSingleItem('span', {
 				'classes':
 					[
-						'ytpe_playlist-list-item_index',
+						'ytpe-playlist_list-item_index',
 					],
 				'textNode': item.snippet.position,
 				}
@@ -50,7 +57,7 @@
 			themeSingleItem('span', {
 				'classes': 
 					[
-						'ytpe_playlist-list-item_thumbnail'
+						'ytpe-playlist_list-item_thumbnail'
 					],
 				'appendChildren':
 					[
@@ -68,7 +75,7 @@
 			themeSingleItem('span', {
 				'classes':
 					[
-						'ytpe_playlist-list-item_title'
+						'ytpe-playlist_list-item_title'
 					],
 				'textNode': item.snippet.title,
 			})
@@ -117,26 +124,6 @@
 		return el;
 	}
 
-	/**
-	 * get html content for each item
-	 *
-	 * @return object
-	 */
-	function playlistMenuItemPrepareElements(item) {
-		var itemInfo = [];
-		var snip = item.snippet;
-		var thumb, title, index, author, description, videoId;
-		itemInfo.position = snip.position;
-		itemInfo.description = snip.description;
-		itemInfo.title = snip.title;
-		itemInfo.videoId = snip.resourceId.videoId;
-		itemInfo.thumb = snip.thumbnails.default.url;
-
-		return itemInfo;
-
-	}
-
-
 	// add the video to page using swfObject
 	function playVideo(videoId, customId, videoDivId) {
 	  	// params for swfObject
@@ -148,8 +135,9 @@
 	}
 
 	// called by youtube embed when video/playlist ready
-	function updateVideo(newVideoId) {
-		player = document.getElementById('myytplayer');
+	function updateVideo(playerParent, newVideoId) {
+		var findPlayer = $('#' + playerParent).find('object').attr('id');
+		var player = document.getElementById(findPlayer);
 		player.cueVideoById(newVideoId);
 	}
 
@@ -189,7 +177,10 @@ function youTubeEmbedPlaylistPlayer(wrapper, playlistId) {
 		// check the page for any iframes
 		var iframes = document.getElementsByTagName('iframe');
 		// get a custom id for video, based on number of iframes
-		var customId = 'ytpe_embedded_player_' + iframes.length + 1;
+		// will base it on etag returned from youtube api
+		var etag = data.etag.split('/');
+		etag = replaceAll('"', "", etag[1]);
+		var customId = 'ytpe_embedded_player_' + etag;
 		// add the first video to the wrapper
 		playVideo(firstVideoId, customId, videoDivId);
 		$mainWrap.append(playListMenu);
@@ -227,7 +218,7 @@ function makeRequest(playlistId) {
 			}
 		);
 		for (var i = 0; i < items.length; i++) {
-			ul.appendChild(getPlaylistMenuItem(items[i]));
+			ul.appendChild(getPlaylistMenuItem(items[i], wrapper));
 		}
 		var playerWrap = document.getElementById('ytpe_playlist-wrapper');
 
@@ -235,6 +226,10 @@ function makeRequest(playlistId) {
 		//console.log(ul);
 	}
 
+// from http://stackoverflow.com/a/1144788/1108292
+function replaceAll(find, replace, str) {
+  return str.replace(new RegExp(find, 'g'), replace);
+}
 
 </script>
 
@@ -264,6 +259,7 @@ function makeRequest(playlistId) {
 
 	 });
 	</script>
+
 
 </body>
 </html>
